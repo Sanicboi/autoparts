@@ -1,19 +1,16 @@
 {
-   "compilerOptions": {
-      "lib": [
-         "es2023",
-         "DOM"
-      ],
-      "target": "es2022",
-      "module": "nodenext",
-      "moduleResolution": "nodenext",
-      "rootDir": ".",
-      "outDir": "./build",
-      "emitDecoratorMetadata": true,
-      "experimentalDecorators": true,
-      "esModuleInterop": true,
-      "strict": true,
-      "strictPropertyInitialization": false,
-      "sourceMap": true
-   }
+  "compilerOptions": {
+    "lib": ["es2023", "DOM"],
+    "target": "es2022",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "rootDir": ".",
+    "outDir": "./build",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "sourceMap": true
+  }
 }
