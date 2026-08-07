@@ -2,7 +2,8 @@ import { FindOptionsRelations } from "typeorm";
 import { User } from "../entities/User";
 import express from "express";
 import { HttpError } from "../errors";
-import { decodeToken } from "../jwt";
+import { decodePlainToken, decodeToken } from "../jwt";
+import { ExtendedError, Socket } from "socket.io";
 
 /**
  * Интерфейс авторизации
@@ -13,6 +14,10 @@ export interface AuthorizedRequest<
   ReqBody = any,
   ReqQuery = any,
 > extends express.Request<P, ResBody, ReqBody, ReqQuery> {
+  user?: User;
+}
+
+export interface AuthorizedSocket extends Socket {
   user?: User;
 }
 
@@ -49,4 +54,26 @@ export const authenticate = (
       return res.status(500).end();
     }
   };
+};
+
+export const authenticateSocket = async (
+  socket: AuthorizedSocket,
+  next: (err?: ExtendedError | undefined) => void,
+) => {
+  const token = socket.handshake.auth.token;
+  if (!token || typeof token !== "string") {
+    next(new Error("Wrong token"));
+    return;
+  }
+
+  try {
+    const user = await decodePlainToken(token);
+    socket.user = user;
+  } catch (error) {
+    if (error instanceof HttpError) {
+      next(error);
+    } else {
+      next(new Error("Error decoding token"));
+    }
+  }
 };

@@ -8,23 +8,11 @@ interface ITokenPayload extends JwtPayload {
   id?: string | any;
 }
 
-/**
- * Декодит JWT и находит пользователя если смог
- * @param header HTTP-хэдер
- * @param relations Опции загрузки отношений (по умолчанию нет)
- * @returns Пользователя
- * @throws HttpError
- */
-export const decodeToken = async (
-  header: string,
+export const decodePlainToken = async (
+  token: string,
   relations: FindOptionsRelations<User> = {},
 ): Promise<User> => {
   if (!process.env.JWT_KEY) throw new HttpError(500);
-  const split = header.split(" ");
-  if (split.length !== 2) throw new HttpError(401);
-  if (split[0] !== "Bearer") throw new HttpError(401);
-  const token = header[1];
-
   let data: string | ITokenPayload;
   try {
     data = jwt.verify(token, process.env.JWT_KEY);
@@ -43,6 +31,26 @@ export const decodeToken = async (
   });
   if (!user) throw new HttpError(404);
   return user;
+};
+
+/**
+ * Декодит JWT и находит пользователя если смог
+ * @param header HTTP-хэдер
+ * @param relations Опции загрузки отношений (по умолчанию нет)
+ * @returns Пользователя
+ * @throws HttpError
+ */
+export const decodeToken = async (
+  header: string,
+  relations: FindOptionsRelations<User> = {},
+): Promise<User> => {
+  if (!process.env.JWT_KEY) throw new HttpError(500);
+  const split = header.split(" ");
+  if (split.length !== 2) throw new HttpError(401);
+  if (split[0] !== "Bearer") throw new HttpError(401);
+  const token = header[1];
+
+  return await decodePlainToken(token);
 };
 
 /**

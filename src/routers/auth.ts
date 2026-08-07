@@ -72,17 +72,23 @@ router.post(
       {
         username?: string | any;
         password?: string | any;
+        signupKey?: string | any;
       }
     >,
     res,
   ) => {
     try {
-      if (!req.body.username || !req.body.password) throw new HttpError(400);
+      if (!req.body.username || !req.body.password || !req.body.signupKey)
+        throw new HttpError(400);
       if (
         typeof req.body.username !== "string" ||
-        typeof req.body.password !== "string"
+        typeof req.body.password !== "string" ||
+        typeof req.body.signupKey !== "string"
       )
         throw new HttpError(400);
+
+      if (req.body.signupKey !== process.env.SIGNUP_KEY!)
+        throw new HttpError(401);
 
       let user = await manager.findOne(User, {
         where: {

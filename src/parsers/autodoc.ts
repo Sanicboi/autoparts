@@ -20,7 +20,7 @@ export const getLowestPrices = async (vin: string[]): Promise<number[]> => {
       longitude: 37.518114508219824,
     });
     const context = browser.defaultBrowserContext();
-    await context.setPermission("https://exist.ru", {
+    await context.setPermission("https://autodoc.ru", {
       permission: {
         name: "geolocation",
       },
@@ -28,30 +28,24 @@ export const getLowestPrices = async (vin: string[]): Promise<number[]> => {
     });
 
     for (const num of vin) {
-      await page.goto("https://exist.ru");
+      await page.goto("https://autodoc.ru");
 
-      const inp = await page.locator("input#pcode").waitHandle();
-      if (!inp) throw new Error("No input");
+      const input = await page.locator("#tui_11786115748515").waitHandle();
+      input.type(String(num));
 
-      await inp.type(num);
-      const sumbitBtn = await page
-        .locator("input.header-search__search-submit-btn")
-        .waitHandle();
-      if (!sumbitBtn) throw new Error("No button");
-      await sumbitBtn.click();
+      const button = await page.locator(".search-button").waitHandle();
+      button.click();
 
-      const textEl = await page
-        .locator(".pricerow>.price__wrapper>.price")
-        .waitHandle();
-      if (!textEl) continue;
-      let textValue = await textEl.evaluate((el) => el.innerHTML);
+      await page.waitForNavigation();
+
+      const priceBtn = await page.locator("a.card__price-link").waitHandle();
+      let textValue: string = await priceBtn.evaluate((el) => el.textContent);
       textValue = /\/[0-9]/.exec(textValue)!.join("");
       prices.push(+textValue);
     }
   } catch (error) {
     prices = [];
   }
-
   await browser.close();
   return prices;
 };
