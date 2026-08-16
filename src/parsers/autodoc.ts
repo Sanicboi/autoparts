@@ -1,13 +1,11 @@
-import puppeteer from "puppeteer";
+import puppeteer, { Browser } from "puppeteer";
 
-export const getLowestPrices = async (vin: string[]): Promise<number[]> => {
-  const browser = await puppeteer.launch({
-    headless: true,
-  });
-  let prices: number[] = [];
+
+export const getLowestPrice = async (vin: string, browser: Browser): Promise<number> => {
+  let price: number = 0;
+  const page = await browser.newPage();
   try {
-    const page = await browser.newPage();
-    await page.setViewport({
+        await page.setViewport({
       width: 1920,
       height: 1080,
     });
@@ -26,12 +24,10 @@ export const getLowestPrices = async (vin: string[]): Promise<number[]> => {
       },
       state: "granted",
     });
-
-    for (const num of vin) {
       await page.goto("https://autodoc.ru");
 
       const input = await page.locator("#tui_11786115748515").waitHandle();
-      input.type(String(num));
+      input.type(vin);
 
       const button = await page.locator(".search-button").waitHandle();
       button.click();
@@ -41,11 +37,11 @@ export const getLowestPrices = async (vin: string[]): Promise<number[]> => {
       const priceBtn = await page.locator("a.card__price-link").waitHandle();
       let textValue: string = await priceBtn.evaluate((el) => el.textContent);
       textValue = /\/[0-9]/.exec(textValue)!.join("");
-      prices.push(+textValue);
-    }
+      price = +textValue;
   } catch (error) {
-    prices = [];
+    price = -1;
   }
-  await browser.close();
-  return prices;
-};
+  await page.close();
+  return price;
+}
+

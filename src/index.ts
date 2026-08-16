@@ -3,10 +3,13 @@ import { AppDataSource } from "./data-source";
 import express from "express";
 import auth from "./routers/auth";
 import { createServer } from "http";
-import { Server, Socket } from "socket.io";
+import { Server } from "socket.io";
 import { authenticateSocket, AuthorizedSocket } from "./middleware/auth";
 import * as exist from "./parsers/exist";
 import * as autodoc from "./parsers/autodoc";
+import puppeteer from "puppeteer";
+
+
 
 export const app = express();
 app.use(express.json());
@@ -20,37 +23,31 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {});
 io.use(authenticateSocket);
 io.on("connection", async (socket: AuthorizedSocket) => {
-  socket.on("parse", async (vin: string) => {
-    if (!socket.user) return;
-    if (!vin || typeof vin !== "string") return;
-    try {
-      const existResults = await exist.getLowestPrices([vin]);
-      const autodocResults = await autodoc.getLowestPrices([vin]);
-      // TODO
-      socket.emit("parse-results", {
-        exist: existResults,
-        autodoc: autodocResults,
-      });
-    } catch (error) {
-      return;
-    }
-  });
-
-  socket.on("parse-multiple", async (vin: string[]) => {
+  socket.on("parse", async (vin: string[]) => {
     if (!socket.user) return;
     if (!vin || !Array.isArray(vin)) return;
-    try {
-      const existResults = await exist.getLowestPrices(vin);
-      const autodocResults = await autodoc.getLowestPrices(vin);
-      // TODO
-      socket.emit("parse-results", {
-        exist: existResults,
-        autodoc: autodocResults,
-      });
-    } catch (error) {
-      return;
+    const browser = await puppeteer.launch({
+      headless: true
+    });
+    for (const v of vin) {
+      try {
+        const ex = await exist.getLowestPrice(v, browser);
+        const ad = await autodoc.getLowestPrice(v, browser);
+        socket.emit('result', {
+          vin: vin,
+          exist: ex,
+          autodoc: ad
+        });
+      } catch (error) {
+        
+      }
     }
+
+    await browser.close();
+    socket.emit('end-parse');
   });
+
+
 });
 
 AppDataSource.initialize()

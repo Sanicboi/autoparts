@@ -1,12 +1,10 @@
-import puppeteer from "puppeteer";
+import puppeteer, { Browser } from "puppeteer";
 
-export const getLowestPrices = async (vin: string[]): Promise<number[]> => {
-  const browser = await puppeteer.launch({
-    headless: true,
-  });
-  let prices: number[] = [];
+export const getLowestPrice = async (vin: string, browser: Browser): Promise<number> => {
+  let price: number = 0;
+  const page = await browser.newPage();
   try {
-    const page = await browser.newPage();
+
     await page.setViewport({
       width: 1920,
       height: 1080,
@@ -26,32 +24,31 @@ export const getLowestPrices = async (vin: string[]): Promise<number[]> => {
       },
       state: "granted",
     });
+    await page.goto("https://exist.ru");
 
-    for (const num of vin) {
-      await page.goto("https://exist.ru");
+    const inp = await page.locator("input#pcode").waitHandle();
+    if (!inp) throw new Error("No input");
 
-      const inp = await page.locator("input#pcode").waitHandle();
-      if (!inp) throw new Error("No input");
-
-      await inp.type(num);
-      const sumbitBtn = await page
-        .locator("input.header-search__search-submit-btn")
-        .waitHandle();
-      if (!sumbitBtn) throw new Error("No button");
+    await inp.type(vin);
+    const sumbitBtn = await page
+      .locator("input.header-search__search-submit-btn")
+      .waitHandle();
+    if (!sumbitBtn) throw new Error("No button");
       await sumbitBtn.click();
 
       const textEl = await page
         .locator(".pricerow>.price__wrapper>.price")
         .waitHandle();
-      if (!textEl) continue;
+      if (!textEl) throw new Error("No text element");
       let textValue = await textEl.evaluate((el) => el.innerHTML);
       textValue = /\/[0-9]/.exec(textValue)!.join("");
-      prices.push(+textValue);
-    }
+      price = +textValue;
   } catch (error) {
-    prices = [];
+    price = -1;
+    
   }
-
-  await browser.close();
-  return prices;
+  await page.close();
+  return price;
 };
+
+
