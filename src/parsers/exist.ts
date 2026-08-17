@@ -1,10 +1,12 @@
 import puppeteer, { Browser } from "puppeteer";
 
-export const getLowestPrice = async (vin: string, browser: Browser): Promise<number> => {
+export const getLowestPrice = async (
+  vin: string,
+  browser: Browser,
+): Promise<number> => {
   let price: number = 0;
   const page = await browser.newPage();
   try {
-
     await page.setViewport({
       width: 1920,
       height: 1080,
@@ -34,21 +36,27 @@ export const getLowestPrice = async (vin: string, browser: Browser): Promise<num
       .locator("input.header-search__search-submit-btn")
       .waitHandle();
     if (!sumbitBtn) throw new Error("No button");
-      await sumbitBtn.click();
+    await sumbitBtn.click();
+    await page.waitForNavigation();
 
-      const textEl = await page
-        .locator(".pricerow>.price__wrapper>.price")
-        .waitHandle();
-      if (!textEl) throw new Error("No text element");
-      let textValue = await textEl.evaluate((el) => el.innerHTML);
-      textValue = /\/[0-9]/.exec(textValue)!.join("");
-      price = +textValue;
+    try {
+      page.setDefaultTimeout(2000);
+      const catalogs = await page.locator(".catalogs>li>a").waitHandle();
+
+      await catalogs.click();
+      await page.waitForNavigation();
+    } catch (error) {}
+    page.setDefaultTimeout(30000);
+
+    const textEl = await page.locator(".price").waitHandle();
+    if (!textEl) throw new Error("No text element");
+    let textValue = await textEl.evaluate((el) => el.innerHTML);
+    textValue = textValue.replace(/\D/g, "");
+    price = +textValue;
   } catch (error) {
     price = -1;
-    
+    console.error(error);
   }
   await page.close();
   return price;
 };
-
-

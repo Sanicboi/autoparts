@@ -19,7 +19,6 @@ export const decodePlainToken = async (
   } catch (error) {
     throw new HttpError(401);
   }
-
   if (typeof data == "string") throw new HttpError(401);
   if (!data.id || typeof data.id !== "string") throw new HttpError(401);
 
@@ -64,12 +63,9 @@ export const createToken = (userOrId: User | string): string => {
   let id: string = typeof userOrId === "string" ? userOrId : userOrId.id;
   const token = jwt.sign(
     {
-      id,
+      id: id,
     },
     process.env.JWT_KEY,
-    {
-      expiresIn: "7d",
-    },
   );
   return token;
 };

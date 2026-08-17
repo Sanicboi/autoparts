@@ -1,5 +1,4 @@
-import puppeteer, { Browser } from "puppeteer";
-
+import { Browser } from "puppeteer";
 
 export const getLowestPrice = async (vin: string, browser: Browser): Promise<number> => {
   let price: number = 0;
@@ -25,21 +24,27 @@ export const getLowestPrice = async (vin: string, browser: Browser): Promise<num
       state: "granted",
     });
       await page.goto("https://autodoc.ru");
+      const input = await page.locator("input[type=\"search\"]").waitHandle();
+      await input.focus();
 
-      const input = await page.locator("#tui_11786115748515").waitHandle();
-      input.type(vin);
-
-      const button = await page.locator(".search-button").waitHandle();
-      button.click();
-
-      await page.waitForNavigation();
-
+      await input.type(vin);
+      await page.keyboard.press('Enter');
+      try {
+        page.setDefaultTimeout(3000);
+        const el = await page.locator('tui-select-option').waitHandle();
+        
+        await el.click();
+      } catch (e) {
+      } 
+      page.setDefaultTimeout(30000);
+      await page.waitForNetworkIdle();
       const priceBtn = await page.locator("a.card__price-link").waitHandle();
       let textValue: string = await priceBtn.evaluate((el) => el.textContent);
-      textValue = /\/[0-9]/.exec(textValue)!.join("");
+      textValue = textValue.replace(/\D/g, "");
       price = +textValue;
   } catch (error) {
     price = -1;
+    console.error(error)
   }
   await page.close();
   return price;

@@ -60,6 +60,7 @@ export const authenticateSocket = async (
   socket: AuthorizedSocket,
   next: (err?: ExtendedError | undefined) => void,
 ) => {
+  console.log('socket connection');
   const token = socket.handshake.auth.token;
   if (!token || typeof token !== "string") {
     next(new Error("Wrong token"));
@@ -70,10 +71,16 @@ export const authenticateSocket = async (
     const user = await decodePlainToken(token);
     socket.user = user;
   } catch (error) {
+    console.error(error);
     if (error instanceof HttpError) {
       next(error);
     } else {
       next(new Error("Error decoding token"));
     }
+    return;
   }
+
+
+
+  next();
 };
