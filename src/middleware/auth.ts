@@ -60,7 +60,7 @@ export const authenticateSocket = async (
   socket: AuthorizedSocket,
   next: (err?: ExtendedError | undefined) => void,
 ) => {
-  console.log('socket connection');
+  console.log("socket connection");
   const token = socket.handshake.auth.token;
   if (!token || typeof token !== "string") {
     next(new Error("Wrong token"));
@@ -79,8 +79,6 @@ export const authenticateSocket = async (
     }
     return;
   }
-
-
 
   next();
 };

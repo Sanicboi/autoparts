@@ -1,10 +1,13 @@
 import { Browser } from "puppeteer";
 
-export const getLowestPrice = async (vin: string, browser: Browser): Promise<number> => {
+export const getLowestPrice = async (
+  vin: string,
+  browser: Browser,
+): Promise<number> => {
   let price: number = 0;
   const page = await browser.newPage();
   try {
-        await page.setViewport({
+    await page.setViewport({
       width: 1920,
       height: 1080,
     });
@@ -23,30 +26,28 @@ export const getLowestPrice = async (vin: string, browser: Browser): Promise<num
       },
       state: "granted",
     });
-      await page.goto("https://autodoc.ru");
-      const input = await page.locator("input[type=\"search\"]").waitHandle();
-      await input.focus();
+    await page.goto("https://autodoc.ru");
+    const input = await page.locator('input[type="search"]').waitHandle();
+    await input.focus();
 
-      await input.type(vin);
-      await page.keyboard.press('Enter');
-      try {
-        page.setDefaultTimeout(3000);
-        const el = await page.locator('tui-select-option').waitHandle();
-        
-        await el.click();
-      } catch (e) {
-      } 
-      page.setDefaultTimeout(30000);
-      await page.waitForNetworkIdle();
-      const priceBtn = await page.locator("a.card__price-link").waitHandle();
-      let textValue: string = await priceBtn.evaluate((el) => el.textContent);
-      textValue = textValue.replace(/\D/g, "");
-      price = +textValue;
+    await input.type(vin);
+    await page.keyboard.press("Enter");
+    try {
+      page.setDefaultTimeout(3000);
+      const el = await page.locator("tui-select-option").waitHandle();
+
+      await el.click();
+    } catch (e) {}
+    page.setDefaultTimeout(30000);
+    await page.waitForNetworkIdle();
+    const priceBtn = await page.locator("a.card__price-link").waitHandle();
+    let textValue: string = await priceBtn.evaluate((el) => el.textContent);
+    textValue = textValue.replace(/\D/g, "");
+    price = +textValue;
   } catch (error) {
     price = -1;
-    console.error(error)
+    console.error(error);
   }
   await page.close();
   return price;
-}
-
+};
