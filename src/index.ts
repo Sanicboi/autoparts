@@ -17,9 +17,6 @@ app.use(express.json());
 app.use(auth);
 app.use(express.static(path.join(process.cwd(), 'dist')));
 
-// app.get("*splat", async (req, res) => {
-//   res.status(200).end();
-// });
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {});
@@ -52,6 +49,11 @@ io.on("connection", async (socket: AuthorizedSocket) => {
     socket.emit("end-parse");
   });
 });
+
+app.get("*splat", async (req, res) => {
+  res.status(200).sendFile(path.join(process.cwd(), 'dist', 'index.html'))
+});
+
 
 AppDataSource.initialize()
   .then(async () => {
