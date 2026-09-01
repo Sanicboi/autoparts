@@ -101,7 +101,7 @@ router.post(
       user = new User();
       user.name = req.body.username;
       user.password = await bcrypt.hash(req.body.password, 12); // TODO: Сделать проверку валидности
-      manager.save(user);
+      await manager.save(user);
 
       const token = createToken(user);
 
