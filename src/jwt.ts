@@ -45,11 +45,12 @@ export const decodeToken = async (
 ): Promise<User> => {
   if (!process.env.JWT_KEY) throw new HttpError(500);
   const split = header.split(" ");
+  console.log(split);
   if (split.length !== 2) throw new HttpError(401);
   if (split[0] !== "Bearer") throw new HttpError(401);
   const token = header[1];
 
-  return await decodePlainToken(token);
+  return await decodePlainToken(token, relations);
 };
 
 /**
